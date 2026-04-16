@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Electricity System ⚡</title>
+
+<style>
+body{
+  margin:0;
+  background:#0b1220;
+  font-family:Arial;
+  text-align:center;
+  color:white;
+}
+
+h2{ margin:10px; }
+
+button{
+  padding:8px 12px;
+  margin:5px;
+  border:none;
+  border-radius:6px;
+  background:white;
+  color:black;
+  font-weight:bold;
+}
+
+canvas{
+  display:block;
+  margin:auto;
+  background:#0f172a;
+  border:1px solid #334155;
+}
+</style>
+</head>
+
+<body>
+
+<h2>ELECTRICITY TRANSFER SYSTEM</h2>
+
+<button onclick="mode='day'">DAY</button>
+<button onclick="mode='night'">NIGHT</button>
+
+<canvas id="c" width="700" height="550"></canvas>
+
+<script>
+const ctx=document.getElementById("c").getContext("2d");
+
+let mode="day";
+
+let posisi={
+ A:[100,100],
+ B:[250,50],
+ C:[400,100],
+ D:[520,220],
+ E:[400,360],
+ F:[250,420],
+ G:[100,260],
+};
+
+let rumah_db={
+ A:{daya:200,storage:150,max_daya:500,max_storage:800,solar:true},
+ B:{daya:200,storage:0,max_daya:400,solar:false},
+ C:{daya:180,storage:0,max_daya:350,solar:false},
+ D:{daya:160,storage:0,max_daya:300,solar:false},
+ E:{daya:250,storage:200,max_daya:500,max_storage:800,solar:true},
+ F:{daya:170,storage:0,max_daya:300,solar:false},
+ G:{daya:150,storage:0,max_daya:250,solar:false},
+};
+
+let global_storage=300;
+let max_global_storage=1500;
+
+let animations=[];
+
+function addAnim(target){
+ let [tx,ty]=posisi[target];
+
+ animations.push({
+   x:340,
+   y:245,
+   tx:tx+35,
+   ty:ty+25,
+   step:0
+ });
+}
+
+function update(){
+
+ for(let k in rumah_db){
+   let d=rumah_db[k];
+   d.daya=Math.floor(Math.max(0,d.daya-1));
+ }
+
+ if(mode==="day"){
+   for(let k in rumah_db){
+     let d=rumah_db[k];
+
+     if(d.solar){
+       let energi=20;
+
+       let ke_daya=Math.min(energi,d.max_daya-d.daya);
+       d.daya=Math.floor(d.daya+ke_daya);
+       energi-=ke_daya;
+
+       let ke_storage=Math.min(energi,d.max_storage-d.storage);
+       d.storage=Math.floor(d.storage+ke_storage);
+       energi-=ke_storage;
+
+       if(energi>0){
+         global_storage=Math.floor(Math.min(max_global_storage,global_storage+energi));
+       }
+     }
+   }
+ }
+
+ else{
+   let list=Object.keys(rumah_db)
+   .filter(k=>!rumah_db[k].solar)
+   .sort((a,b)=>
+     (rumah_db[a].daya/rumah_db[a].max_daya)-
+     (rumah_db[b].daya/rumah_db[b].max_daya)
+   );
+
+   for(let k of list){
+     let d=rumah_db[k];
+     let need=d.max_daya-d.daya;
+
+     let take=Math.min(d.storage,3,need);
+     take=Math.floor(take);
+
+     d.storage=Math.floor(d.storage-take);
+     d.daya=Math.floor(d.daya+take);
+     need-=take;
+
+     if(take>0) addAnim(k);
+
+     if(need>0&&global_storage>0){
+       let g=Math.min(global_storage,3,need);
+       g=Math.floor(g);
+
+       global_storage=Math.floor(global_storage-g);
+       d.daya=Math.floor(d.daya+g);
+
+       addAnim(k);
+     }
+   }
+ }
+}
+
+function draw(){
+
+ ctx.clearRect(0,0,700,550);
+
+ ctx.strokeStyle="rgba(255,255,255,0.05)";
+ for(let i=0;i<700;i+=50){
+   ctx.beginPath();ctx.moveTo(i,0);ctx.lineTo(i,550);ctx.stroke();
+   ctx.beginPath();ctx.moveTo(0,i);ctx.lineTo(700,i);ctx.stroke();
+ }
+
+ ctx.fillStyle="white";
+ ctx.font="14px Arial";
+ ctx.fillText("MODE "+mode.toUpperCase(),20,25);
+
+ let gx=250,gy=200;
+
+ ctx.fillStyle="#1e40af";
+ ctx.fillRect(gx,gy,180,90);
+
+ ctx.strokeStyle="white";
+ ctx.strokeRect(gx,gy,180,90);
+
+ ctx.fillStyle="white";
+ ctx.font="12px Arial";
+
+ ctx.fillText("GLOBAL STORAGE",gx+15,gy+20);
+
+ ctx.fillText(
+   Math.floor(global_storage)+"/"+Math.floor(max_global_storage),
+   gx+15,gy+45
+ );
+
+ ctx.fillStyle="#38bdf8";
+ ctx.fillRect(
+   gx+10,gy+60,
+   160*(global_storage/max_global_storage),10
+ );
+
+ for(let k in rumah_db){
+
+   let d=rumah_db[k];
+   let [x,y]=posisi[k];
+
+   let pct=d.daya/d.max_daya;
+
+   let color=
+     pct>0.6?"#22c55e":
+     pct>0.3?"#facc15":
+     "#ef4444";
+
+   ctx.fillStyle=color;
+   ctx.fillRect(x,y,70,45);
+
+   ctx.beginPath();
+   ctx.moveTo(x,y);
+   ctx.lineTo(x+35,y-20);
+   ctx.lineTo(x+70,y);
+   ctx.fill();
+
+   ctx.fillStyle="#111111";
+   ctx.font="10px Arial";
+
+   ctx.fillText(k,x+28,y+18);
+
+   ctx.fillText(
+     "D:"+Math.floor(d.daya)+"/"+Math.floor(d.max_daya),
+     x+5,y+33
+   );
+
+   // 🔥 FIX UTAMA: TEKS SOLAR DINAIKKAN
+   if(d.solar){
+     ctx.fillText(
+       "S:"+Math.floor(d.storage)+"/"+Math.floor(d.max_storage),
+       x+5,y+42   // <- INI YANG DIUBAH (sebelumnya 48)
+     );
+   }
+ }
+
+ ctx.fillStyle="white";
+
+ animations.forEach(a=>{
+   a.step++;
+
+   let nx=a.x+(a.tx-a.x)*a.step/20;
+   let ny=a.y+(a.ty-a.y)*a.step/20;
+
+   ctx.fillText("⚡",nx,ny);
+ });
+
+ animations=animations.filter(a=>a.step<=20);
+}
+
+setInterval(update,500);
+setInterval(draw,60);
+
+</script>
+
+</body>
+</html>

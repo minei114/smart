@@ -3,7 +3,7 @@ window.addEventListener("load", () => {
 const canvas = document.getElementById("c");
 const ctx = canvas.getContext("2d");
 
-let mode = "day";
+let mode = "Net Load Positif";
 
 // ===== POSISI RUMAH (LAYOUT FIX) =====
 let posisi = {
@@ -34,8 +34,8 @@ let anim = [];
 const center = [450,300];
 
 // ===== BUTTON =====
-document.getElementById("dayBtn").onclick = ()=>mode="day";
-document.getElementById("nightBtn").onclick = ()=>mode="night";
+document.getElementById("dayBtn").onclick = ()=>mode="Net Load Positif";
+document.getElementById("nightBtn").onclick = ()=>mode="Net Load Negatif";
 
 // ===== ANIMASI =====
 function addAnim(target){

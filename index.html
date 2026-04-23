@@ -37,15 +37,15 @@ canvas{
 
 <h2>ELECTRICITY TRANSFER SYSTEM</h2>
 
-<button onclick="mode='day'">DAY</button>
-<button onclick="mode='night'">NIGHT</button>
+<button onclick="mode='Net Load Positif'">Net Load Positif</button>
+<button onclick="mode='Net Load Negatif'">Net Load Negatif</button>
 
 <canvas id="c" width="700" height="550"></canvas>
 
 <script>
 const ctx=document.getElementById("c").getContext("2d");
 
-let mode="day";
+let mode="Net Load Positif";
 
 let posisi={
  A:[100,100],
@@ -91,7 +91,7 @@ function update(){
    d.daya=Math.floor(Math.max(0,d.daya-1));
  }
 
- if(mode==="day"){
+ if(mode==="Net Load Positif"){
    for(let k in rumah_db){
      let d=rumah_db[k];
 
